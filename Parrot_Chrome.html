@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>Test</title>
+</head>
+<body>
+<textarea id="textarea" rows=10 cols=80></textarea>
+<button id="button" onclick="toggleStartStop()"></button>
+<div id="langList"></div>
+<script type="text/javascript">
+  var recognizing;
+  var recognition = new webkitSpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  reset();
+  recognition.onend = reset;
+  var final_transcript = '';
+  var voices = [];
+  var currentVoice = 0;
+
+  recognition.onresult = function (event) {
+    var interim_transcript = '';
+    for (var i = event.resultIndex; i < event.results.length; ++i) {
+	  if (event.results[i].isFinal) {
+	    var new_part = event.results[i][0].transcript.trim() + '.\n';
+        final_transcript += new_part;
+		var msg = new SpeechSynthesisUtterance(new_part);
+		msg.voice = currentVoice > 0 ? voices[currentVoice] : null;
+		msg.rate = 1.5;
+		msg.pitch = 1;
+		window.speechSynthesis.speak(msg);
+      } else {
+        interim_transcript += event.results[i][0].transcript;
+      }
+	  textarea.value = final_transcript + '>> ' + interim_transcript;
+    }
+  }
+
+  function reset() {
+    recognizing = false;
+    button.innerHTML = "Click to Speak";
+  }
+  function toggleStartStop() {
+    if (recognizing) {
+      recognition.stop();
+	  reset();
+    } else {
+      recognition.start();
+      recognizing = true;
+      button.innerHTML = "Click to Stop";
+	  final_transcript = ''
+	  textarea.value = final_transcript;
+    }
+  }
+  var two_line = /\n\n/g;
+  var one_line = /\n/g;
+  function linebreak(s) {
+	return s.replace(two_line, '<p></p>').replace(one_line, '<br>');
+  }
+
+var langList = document.getElementById('langList');
+if ('speechSynthesis' in window) {
+    // Start an html table for languages details
+	
+	// Get voices; add to table markup
+	function loadVoices() {
+		var text = '<table border=1><tr><th>Default<th>Language<th>Local<th>Name<th>URI</tr>';
+		voices = speechSynthesis.getVoices();
+		voices.forEach(function(voice, i) {
+        // Add all details to table
+        text += '<tr><td>' + voice.default + '<td>'
+            + voice.lang + '<td>' + voice.localService
+            + '<td>' + (voice.localService && i != currentVoice 
+				? '<button onclick="myFunction(' + i + ')">' + voice.name + '</button>' 
+				: (i == currentVoice ? '<b>' + voice.name + '</b>' : voice.name))
+			+ '<td>' + voice.voiceURI;
+        });
+		langList.innerHTML = text;
+	}
+	loadVoices();
+	// Chrome loads voices asynchronously.
+	window.speechSynthesis.onvoiceschanged = function(e) {
+		loadVoices();
+	}
+}
+function myFunction(v) {
+  currentVoice = v;
+  //langList.innerHTML = '' + v;
+  loadVoices();
+}
+
+</script>
+</body>
