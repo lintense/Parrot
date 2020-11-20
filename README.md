@@ -21,7 +21,7 @@ It is possible to install more voices by following this procedure: [3]
 >{\
 >$source = $voice.PSPath #Get the path of this voices key\
 >copy -Path $source -Destination $destinationPath -Recurse\
->}\
+>}
 
 ## References
 The original example was taken from:
