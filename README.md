@@ -14,14 +14,14 @@ It is possible to install more voices by following this procedure: [3]
 
 * Start Powershell as an Administrator
 * Execute the following script
->$sourcePath = 'HKLM:\software\Microsoft\Speech_OneCore\Voices\Tokens' #Where the OneCore voices live
->$destinationPath = 'HKLM:\SOFTWARE\Microsoft\Speech\Voices\Tokens' #For 64-bit apps
->$listVoices = Get-ChildItem $sourcePath
->foreach($voice in $listVoices)
->{
->$source = $voice.PSPath #Get the path of this voices key
->copy -Path $source -Destination $destinationPath -Recurse
->}
+>$sourcePath = 'HKLM:\software\Microsoft\Speech_OneCore\Voices\Tokens' #Where the OneCore voices live\
+>$destinationPath = 'HKLM:\SOFTWARE\Microsoft\Speech\Voices\Tokens' #For 64-bit apps\
+>$listVoices = Get-ChildItem $sourcePath\
+>foreach($voice in $listVoices)\
+>{\
+>$source = $voice.PSPath #Get the path of this voices key\
+>copy -Path $source -Destination $destinationPath -Recurse\
+>}\
 
 ## References
 The original example was taken from:
