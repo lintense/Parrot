@@ -7,6 +7,13 @@ This very simple demo *Parrot* can be used as a proof of concept.
 To use it, you will need a headset with a microphone.
 For now, the demo application has only been tested on Chrome and Windows 10.
 
+## How to use
+
+* Click on the "Click to speak" button
+* Authorize browser to use microphone
+* Speak slowly and clearly
+* Wait for feedback
+
 ![Screenshot](/Parrot.png)
 
 ## More voices
