@@ -7,7 +7,7 @@ This very simple demo *Parrot* can be used as a proof of concept.
 To use it, you will need a headset with a microphone.
 For now, the demo application has only been tested on Chrome and Windows 10.
 
-![Screenshot]Parrot.png
+![Screenshot](/Parrot.png)
 
 ## More voices
 It is possible to install more voices by following this procedure: [3]
