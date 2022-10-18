@@ -9,8 +9,18 @@
 <button id="button" onclick="toggleStartStop()"></button>
 <div id="langList"></div>
 <script type="text/javascript">
+// https://jensarps.de/2013/03/07/using-voice-commands-to-control-your-game/
+
+let replacements = {'fr-CA':'fr-FR'}
+function getLang(l) {
+	return replacements[l] || l
+}
+
+const PROMPT = '> '
   var recognizing;
   var recognition = new webkitSpeechRecognition();
+  
+  recognition.lang = getLang(window.navigator.userLanguage || window.navigator.language)
   recognition.continuous = true;
   recognition.interimResults = true;
   reset();
@@ -23,8 +33,9 @@
     var interim_transcript = '';
     for (var i = event.resultIndex; i < event.results.length; ++i) {
 	  if (event.results[i].isFinal) {
-	    var new_part = event.results[i][0].transcript.trim() + '.\n';
-        final_transcript += new_part;
+	    let conf = Math.floor(event.results[i][0].confidence * 100) + '%'
+	    var new_part = event.results[i][0].transcript.trim() + '.'
+        final_transcript += new_part + ' (' + conf + ')\n'
 		var msg = new SpeechSynthesisUtterance(new_part);
 		msg.voice = currentVoice > 0 ? voices[currentVoice] : null;
 		msg.rate = 1.5;
@@ -33,7 +44,7 @@
       } else {
         interim_transcript += event.results[i][0].transcript;
       }
-	  textarea.value = final_transcript + '>> ' + interim_transcript;
+	  textarea.value = final_transcript + recognition.lang + PROMPT + interim_transcript;
     }
   }
 
@@ -50,7 +61,7 @@
       recognizing = true;
       button.innerHTML = "Click to Stop";
 	  final_transcript = ''
-	  textarea.value = final_transcript;
+	  textarea.value = recognition.lang + PROMPT
     }
   }
   var two_line = /\n\n/g;
@@ -68,27 +79,30 @@ if ('speechSynthesis' in window) {
 		var text = '<table border=1><tr><th>Default<th>Language<th>Local<th>Name<th>URI</tr>';
 		voices = speechSynthesis.getVoices();
 		voices.forEach(function(voice, i) {
-        // Add all details to table
-        text += '<tr><td>' + voice.default + '<td>'
-            + voice.lang + '<td>' + voice.localService
-            + '<td>' + (voice.localService && i != currentVoice 
-				? '<button onclick="myFunction(' + i + ')">' + voice.name + '</button>' 
-				: (i == currentVoice ? '<b>' + voice.name + '</b>' : voice.name))
-			+ '<td>' + voice.voiceURI;
+			// Add all details to table
+			text += '<tr><td>' + voice.default + '<td>'
+				+ voice.lang + '<td>' + voice.localService
+				+ '<td>' + (voice.localService && i != currentVoice 
+					? '<button onclick="myFunction(' + i + ')">' + voice.name + '</button>' 
+					: (i == currentVoice ? '<b>' + voice.name + '</b>' : voice.name))
+				+ '<td>' + voice.voiceURI;
         });
 		langList.innerHTML = text;
 	}
 	loadVoices();
+	
 	// Chrome loads voices asynchronously.
 	window.speechSynthesis.onvoiceschanged = function(e) {
 		loadVoices();
+		if (voices)
+			recognition.lang = getLang(voices.find(v => v.default).lang)
 	}
 }
 function myFunction(v) {
   currentVoice = v;
-  //langList.innerHTML = '' + v;
   loadVoices();
+  recognition.lang = getLang(voices[v].lang)
+  textarea.value = final_transcript + recognition.lang + PROMPT
 }
-
 </script>
 </body>
