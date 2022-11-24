@@ -11,7 +11,8 @@
 <script type="text/javascript">
 // https://jensarps.de/2013/03/07/using-voice-commands-to-control-your-game/
 
-let replacements = {'fr-CA':'fr-FR'}
+let autoRestart = false
+let replacements = {'fr-CA':'fr-FR'} //, 'en-CA':'en-US'}
 function getLang(l) {
 	return replacements[l] || l
 }
@@ -45,6 +46,7 @@ const PROMPT = '> '
         interim_transcript += event.results[i][0].transcript;
       }
 	  textarea.value = final_transcript + recognition.lang + PROMPT + interim_transcript;
+	  textarea.scrollTop = textarea.scrollHeight;
     }
   }
 
@@ -54,9 +56,11 @@ const PROMPT = '> '
   }
   function toggleStartStop() {
     if (recognizing) {
+	  autoRestart = false
       recognition.stop();
 	  reset();
     } else {
+	  autoRestart = true
       recognition.start();
       recognizing = true;
       button.innerHTML = "Click to Stop";
@@ -99,10 +103,25 @@ if ('speechSynthesis' in window) {
 	}
 }
 function myFunction(v) {
-  currentVoice = v;
-  loadVoices();
+  currentVoice = v
+  loadVoices()
+  console.log(getLang(voices[v].lang))
   recognition.lang = getLang(voices[v].lang)
   textarea.value = final_transcript + recognition.lang + PROMPT
 }
+// https://github.com/TalAter/annyang/blob/master/src/annyang.js
+// Must be HTTPS to avoid repeating the user prompt!
+recognition.onend = function() {
+	recognizing = false
+	autoRestart && toggleStartStop()
+}
+// https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognitionErrorEvent/error
+recognition.onerror = function (event) {
+	recognizing = true
+	toggleStartStop()
+	//autoRestart = recognizing = false
+	//recognition.stop()
+	console.log("ERROR> " + event.error )
+};
 </script>
 </body>
