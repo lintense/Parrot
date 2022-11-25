@@ -17,13 +17,21 @@ function getLang(l) {
 	return replacements[l] || l
 }
 
+const grammar = '#JSGF V1.0; grammar colors; public <color> = black | blue | gray | red | white | yellow ;'
+const speechRecognitionList = new webkitSpeechGrammarList();
+speechRecognitionList.addFromString(grammar, 1); // weigth = 1 (normal)
+
 const PROMPT = '> '
   var recognizing;
   var recognition = new webkitSpeechRecognition();
+  recognition.grammars = speechRecognitionList;
   
   recognition.lang = getLang(window.navigator.userLanguage || window.navigator.language)
   recognition.continuous = true;
   recognition.interimResults = true;
+  
+  recognition.maxAlternatives = 5;
+  
   reset();
   recognition.onend = reset;
   var final_transcript = '';
@@ -34,8 +42,12 @@ const PROMPT = '> '
     var interim_transcript = '';
     for (var i = event.resultIndex; i < event.results.length; ++i) {
 	  if (event.results[i].isFinal) {
-	    let conf = Math.floor(event.results[i][0].confidence * 100) + '%'
-	    var new_part = event.results[i][0].transcript.trim() + '.'
+		let bestIndex = 0
+		for (let index = 0; index < event.results[i].length; index++)
+			bestIndex = event.results[i][index].confidence > event.results[i][bestIndex].confidence ? index : bestIndex
+		console.log(event.results[i])
+	    let conf = Math.floor(event.results[i][bestIndex].confidence * 100) + '%'
+	    var new_part = event.results[i][bestIndex].transcript.trim() + '.'
         final_transcript += new_part + ' (' + conf + ')\n'
 		var msg = new SpeechSynthesisUtterance(new_part);
 		msg.voice = currentVoice > 0 ? voices[currentVoice] : null;
@@ -56,17 +68,17 @@ const PROMPT = '> '
   }
   function toggleStartStop() {
     if (recognizing) {
-	  autoRestart = false
-      recognition.stop();
+	  autoRestart = recognizing = false
+      recognition.stop()
 	  reset();
     } else {
-	  autoRestart = true
-      recognition.start();
-      recognizing = true;
+	  autoRestart = recognizing = true
+      recognition.start()
       button.innerHTML = "Click to Stop";
 	  final_transcript = ''
 	  textarea.value = recognition.lang + PROMPT
     }
+	return true
   }
   var two_line = /\n\n/g;
   var one_line = /\n/g;
@@ -112,13 +124,15 @@ function myFunction(v) {
 // https://github.com/TalAter/annyang/blob/master/src/annyang.js
 // Must be HTTPS to avoid repeating the user prompt!
 recognition.onend = function() {
-	recognizing = false
-	autoRestart && toggleStartStop()
+	//recognizing = false
+	autoRestart && toggleStartStop() && toggleStartStop()
 }
 // https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognitionErrorEvent/error
 recognition.onerror = function (event) {
-	recognizing = true
+	//recognizing = true
 	toggleStartStop()
+	event.error == 'no-speech' && toggleStartStop()
+	
 	//autoRestart = recognizing = false
 	//recognition.stop()
 	console.log("ERROR> " + event.error )
